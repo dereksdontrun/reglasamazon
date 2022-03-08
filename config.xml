@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module>
+	<name>reglasamazon</name>
+	<displayName><![CDATA[Reglas de precios Amazon]]></displayName>
+	<version><![CDATA[1.0.0]]></version>
+	<description><![CDATA[Establecer los parámetros de las reglas de precios para los marketplaces de Amazon.]]></description>
+	<author><![CDATA[Sergio]]></author>
+	<tab><![CDATA[administration]]></tab>
+	<is_configurable>1</is_configurable>
+	<need_instance>1</need_instance>
+</module>
