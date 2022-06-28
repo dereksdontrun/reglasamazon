@@ -32,8 +32,11 @@
 	<p>
 		Aquí puedes modificar los parámetros en función a los que se establecerán las reglas de precios para los diferentes marketplaces de Amazon.<br />
 		Se muestra la información almacenada en la tabla de reglas de Amazon, puedes editar los valores, añadir un nuevo marketplace o eliminar uno existente.<br />
-		El botón guardar almacenará los parámetros actuales. El botón exportar generará el documento para importar las reglas en Amazon.
-	</p>	
+		El botón guardar almacenará los parámetros actuales. El botón exportar generará el documento para importar las reglas en Amazon.<br />
+		Margen mínimo C corresponde al aplicable a los productos de clasificación C que no tienen la categoría Outlet y su antigüedad es superior a la establecida para considerarlos novedad.<br />
+		Margen mínimo Outlet corresponde al aplicable a los productos que tienen la categoría Outlet independientemente de su antigüedad o clasificación ABC.<br />
+		Margen mínimo corresponde al resto de los productos (no tienen la categoría Outlet ni clasificación C).
+	</p>		
 </div>
  {* Quiero cargar la página de configuración del módulo con los datos que haya en la tabla frik_amazon_reglas, a modo de formulario rellenado, así puede editarse, añadir un nuevo país (o eliminar uno) y guardar lo que se edite o se cree.
  En lugar de utilizar el helper para forms de prestashop, que es un lío, genero todo directamente en el tpl *}
@@ -41,11 +44,22 @@
 	<h3><i class="icon icon-cogs"></i> Configuración</h3>
 	
 	<form method="post" action="" class="form-inline" id="formulario_reglas">
+		<div class="form-group row">
+			<div class="form-group div_input">
+				<label for="nombre_regla">Nombre Regla</label>
+				<div class="input-group">
+					<span class="input-group-addon"><i class="icon icon-pencil"></i></span>
+					<input type="text" name="nombre_regla" id="nombre_regla" value="{$nombre_regla|escape:'html':'UTF-8'}" class="form-control" required>
+				</div>
+			</div>
+		</div>	
+		<hr>
+
 		<div id="contenedor_marketplaces"> {* Lo necesitamos para hacer appendchild cuando añadimos nuevos marketplaces *}
 		{if $no_hay_datos}
 			<h1>NO HAY NINGUNA INFORMACIÓN DE REGLAS DE PRECIO ALMACENADA</h1>
 			<hr>
-		{else}
+		{else}	
 			{* {$marketplaces|@var_dump} *}			
 			{foreach $marketplaces as $marketplace}
 				
@@ -83,6 +97,20 @@
 						<div class="input-group">
 							<span class="input-group-addon">%</span>
 							<input type="text" name="margen_minimo_{$marketplace['id_amazon_reglas']}" id="margen_minimo_{$marketplace['id_amazon_reglas']}" value="{$marketplace['margen_minimo']|escape:'html':'UTF-8'}" class="form-control numerico" required>
+						</div>
+					</div>
+					<div class="form-group col-xs-1 div_input">
+						<label for="margen_minimo_c_{$marketplace['id_amazon_reglas']}">Margen Mínimo C</label>
+						<div class="input-group">
+							<span class="input-group-addon">%</span>
+							<input type="text" name="margen_minimo_c_{$marketplace['id_amazon_reglas']}" id="margen_minimo_c_{$marketplace['id_amazon_reglas']}" value="{$marketplace['margen_minimo_c']|escape:'html':'UTF-8'}" class="form-control numerico" required>
+						</div>
+					</div>
+					<div class="form-group col-xs-1 div_input">
+						<label for="margen_minimo_outlet_{$marketplace['id_amazon_reglas']}">Margen Mínimo Outlet</label>
+						<div class="input-group">
+							<span class="input-group-addon">%</span>
+							<input type="text" name="margen_minimo_outlet_{$marketplace['id_amazon_reglas']}" id="margen_minimo_outlet_{$marketplace['id_amazon_reglas']}" value="{$marketplace['margen_minimo_outlet']|escape:'html':'UTF-8'}" class="form-control numerico" required>
 						</div>
 					</div>
 					<div class="form-group col-xs-1 div_input">

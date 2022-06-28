@@ -172,6 +172,9 @@
 		</button>
 		<button type="submit" id="exportar_reglas" name="exportar_reglas" class="btn btn-default pull-right">            
 			<i class="process-icon-export icon-export"></i> Exportar reglas      
+		</button>
+		<button type="submit" id="exportar_productos_pesados" name="exportar_productos_pesados" class="btn btn-default pull-right">            
+			<i class="process-icon-anchor icon-anchor"></i> Productos Pesados      
 		</button>	
 	</form>
 	

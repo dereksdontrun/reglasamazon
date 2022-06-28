@@ -308,7 +308,8 @@ class Reglasamazon extends Module
                 foreach ($productos as $producto){
                     $sku = $producto['sku'];
                     $minimum = $producto['minimum-seller-allowed-price'];
-                    $maximum = $producto['maximum-seller-allowed-price'];
+                    // $maximum = $producto['maximum-seller-allowed-price']; Por problemas con el máximo, lo ponemos doble para probar
+                    $maximum = $producto['maximum-seller-allowed-price']*2;
                     $country = $producto['country-code'];
                     $currency = $producto['currency-code'];
                     $rule = $producto['rule-name'];
@@ -333,6 +334,61 @@ class Reglasamazon extends Module
             }
 
         }   
+
+        //28/06/2022 Añadimos reglas de exportar productos psados al botón Productos Pesados
+        if (((bool)Tools::isSubmit('exportar_productos_pesados')) == true) {
+            //obtenemos los productos con categoría amazon, con stock disponible, con peso de 1kg o más
+            $sql_productos = 'SELECT IFNULL(pat.reference, pro.reference) AS sku
+            FROM lafrips_product pro
+            JOIN lafrips_stock_available ava ON pro.id_product = ava.id_product 
+            LEFT JOIN lafrips_product_attribute pat ON pat.id_product = ava.id_product AND pat.id_product_attribute = ava.id_product_attribute
+            WHERE pro.id_product IN ( #categorías aAmazon
+            SELECT id_product FROM lafrips_category_product WHERE id_category IN (2164, 2347, 2351, 2356, 2360, 2366, 2368, 2372, 2383, 2445, 2446, 2452))
+            AND ava.quantity > 0
+            AND #si el producto tiene atributos, evitamos el producto base, solo el atributo con stock
+            (
+                CASE
+                    WHEN (SELECT COUNT(id_product) FROM lafrips_stock_available WHERE id_product = pro.id_product) > 1 THEN ava.id_product_attribute != 0
+                    ELSE ava.id_product_attribute = 0
+                END
+            )
+            AND pro.active = 1
+            AND pro.cache_is_pack = 0
+            AND pro.weight >= 1 #solo productos pesados
+            ORDER BY pro.id_product, sku ASC';
+
+            if ($productos = Db::getInstance()->ExecuteS($sql_productos)){ 
+                //creamos y abrimos el txt donde meteremos la información
+                $archivo = 'productos_pesados_amazon_'.date('d').'-'.date('m').'-'.date('Y').'_'.date('H').date('i').date('s').'.txt';
+                $contenido = fopen($archivo, "w") or die("Unable to open file!");
+
+                // La primera línea es sku add-delete merchant-shipping-group-name, separados por tabulado \t
+                // \n y \t tienen que ir entre comillas dobles para que sean cambio de página y tabulado                
+                fwrite($contenido, "sku\tadd-delete\tmerchant-shipping-group-name\n");
+                
+                foreach ($productos as $producto){
+                    $sku = $producto['sku'];                    
+                    
+                    //las variables se ponen sin '..' porque al ir entre dobles comillas las interpreta directamente
+                    //la acción es a de add, el nombre de la regla, Productos Pesados, tiene que ir en cada línea con cada sku
+                    fwrite($contenido, "$sku\ta\tProductos Pesados\n");
+                    
+                }
+
+                //una vez lleno, cerramos el archivo
+                fclose($contenido);
+                header('Content-Description: File Transfer');
+                header('Content-Disposition: attachment; filename='.basename($archivo));
+                header('Expires: 0');
+                header('Cache-Control: must-revalidate');
+                header('Pragma: public');
+                header('Content-Length: ' . filesize($archivo));
+                header("Content-Type: text/plain");
+                readfile($archivo);
+
+            }
+
+        }
 
         $this->context->smarty->assign('module_dir', $this->_path);
 

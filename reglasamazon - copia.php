@@ -105,6 +105,15 @@ class Reglasamazon extends Module
             //con ese id sacamos los campos del formulario
             // print_r($_POST['hiddenids']);
             // print_r($_POST['hiddennuevosids']);
+            // print_r($_POST['nombre_regla']);
+
+            //08/03/2022 comprobamos el campo del input nombre_reglas
+            $nombre_regla_almacenado = Configuration::get('REGLASAMAZON_NOMBRE_REGLA');
+            $nombre_regla_formulario = $_POST['nombre_regla'];
+
+            if ($nombre_regla_almacenado != $nombre_regla_formulario) {
+                Configuration::updateValue('REGLASAMAZON_NOMBRE_REGLA', $nombre_regla_formulario);
+            }
 
             //los id vienen unidos por '-'
             if ($_POST['hiddenids']) {
@@ -177,7 +186,10 @@ class Reglasamazon extends Module
             //03/06/2021 obtenemos los días que un producto es considerado novedad (clasificación B) desde lafrips_configuration así como los límites para considerar un producto C o B según consumo
             // 10/06/2021 Se cambia la gestión de lafrips_consumos, novedad va marcado en la tabla y la clasificación abc también, de modo que se puede modificar la sql
             $novedad = (int)Configuration::get('CLASIFICACIONABC_NOVEDAD', 0);
-            $maxC = Configuration::get('CLASIFICACIONABC_MAX_C');            
+            $maxC = Configuration::get('CLASIFICACIONABC_MAX_C');        
+            
+            //08/03/2022 obtenemos nombre regla
+            $nombre_regla = Configuration::get('REGLASAMAZON_NOMBRE_REGLA');
 
             $sql_productos = "SELECT IFNULL(pat.reference, pro.reference) AS sku, 
             REPLACE(
@@ -254,7 +266,7 @@ class Reglasamazon extends Module
             AS 'maximum-seller-allowed-price', #si el pvp sin descuentos + coste track es > 30, se pone signed. Luego se añade amazon y margen mínimo y cambio moneda  
             are.codigo AS 'country-code', 
             are.moneda AS 'currency-code', 
-            'BuyBoxEurope' AS 'rule-name',
+            '$nombre_regla' AS 'rule-name', #08/03/2022 posibilidad de cambiar nombre regla
             are.accion AS 'rule-action'
             FROM lafrips_product pro
             JOIN lafrips_stock_available ava ON pro.id_product = ava.id_product #AND ava.id_product_attribute = 0
@@ -296,7 +308,8 @@ class Reglasamazon extends Module
                 foreach ($productos as $producto){
                     $sku = $producto['sku'];
                     $minimum = $producto['minimum-seller-allowed-price'];
-                    $maximum = $producto['maximum-seller-allowed-price'];
+                    // $maximum = $producto['maximum-seller-allowed-price']; Por problemas con el máximo, lo ponemos doble para probar
+                    $maximum = $producto['maximum-seller-allowed-price']*2;
                     $country = $producto['country-code'];
                     $currency = $producto['currency-code'];
                     $rule = $producto['rule-name'];
@@ -328,6 +341,9 @@ class Reglasamazon extends Module
         $sql_marketplaces = 'SELECT * FROM frik_amazon_reglas';
         $marketplaces = Db::getInstance()->ExecuteS($sql_marketplaces);
 
+        //08/03/2022 obtenemos el nombre configurado para las reglas
+        $nombre_regla = Configuration::get('REGLASAMAZON_NOMBRE_REGLA'); 
+
         if (count($marketplaces) < 1) {
             $no_hay_datos = true;
         } else {
@@ -340,6 +356,7 @@ class Reglasamazon extends Module
         $this->context->smarty->assign(array(
             'no_hay_datos' => $no_hay_datos,
             'marketplaces' => $marketplaces,
+            'nombre_regla' => $nombre_regla,
             'url_js' => $this->_path.'views/js/back_reglas_amazon.js',
             'url_css' => $this->_path.'views/css/back_reglas_amazon.css',
             
