@@ -30,12 +30,13 @@
 <div class="panel">
 	<h3><i class="icon icon-credit-card"></i> {l s='Reglas de precios Amazon' mod='reglasamazon'}</h3>
 	<p>
-		Aquí puedes modificar los parámetros en función a los que se establecerán las reglas de precios para los diferentes marketplaces de Amazon.<br />
-		Se muestra la información almacenada en la tabla de reglas de Amazon, puedes editar los valores, añadir un nuevo marketplace o eliminar uno existente.<br />
-		El botón guardar almacenará los parámetros actuales. El botón exportar generará el documento para importar las reglas en Amazon.<br />
-		Margen mínimo C corresponde al aplicable a los productos de clasificación C que no tienen la categoría Outlet y su antigüedad es superior a la establecida para considerarlos novedad.<br />
-		Margen mínimo Outlet corresponde al aplicable a los productos que tienen la categoría Outlet independientemente de su antigüedad o clasificación ABC.<br />
-		Margen mínimo corresponde al resto de los productos (no tienen la categoría Outlet ni clasificación C).
+		Aquí puedes modificar los parámetros en función a los que se establecerán las reglas de precios para los diferentes marketplaces de Amazon.<br>
+		Se muestra la información almacenada en la tabla de reglas de Amazon, puedes editar los valores, añadir un nuevo marketplace o eliminar uno existente.<br>
+		El botón guardar almacenará los parámetros actuales. El botón inferior Exportar Reglas generará el documento para importar las reglas en Amazon, con referencia a cada marketplace. Cada botón lateral de Exportar generará un documento para importar en cada marketplace de Amazon que contendrá el PVP y el stock de cada producto con categoría Amazon, y en el caso de los porductos de venta sin stock reflejará un stock de 999 unidades y una latencia de 4 días. Además incluirá cada producto de peso superior a un kg y marketplace no España en la regla de envíos Productos Pesados, y en el caso del marketplace España, incluirá los productos de venta sin stock en la regla de envíos Productos No Prime ligeros.<br>
+		Margen mínimo C corresponde al aplicable a los productos de clasificación C que no tienen la categoría Outlet y su antigüedad es superior a la establecida para considerarlos novedad.<br>
+		Margen mínimo Outlet corresponde al aplicable a los productos que tienen la categoría Outlet independientemente de su antigüedad o clasificación ABC.<br>
+		Margen mínimo corresponde al resto de los productos (no tienen la categoría Outlet ni clasificación C).<br>
+		Margen mínimo Sin Stock corresponde a los productos que vendemos sin stock físico en la web. Esta regla tiene más peso que las demás, si un producto es C y sin stock, el margen a aplicar será Sin Stock.
 	</p>		
 </div>
  {* Quiero cargar la página de configuración del módulo con los datos que haya en la tabla frik_amazon_reglas, a modo de formulario rellenado, así puede editarse, añadir un nuevo país (o eliminar uno) y guardar lo que se edite o se cree.
@@ -64,83 +65,102 @@
 			{foreach $marketplaces as $marketplace}
 				
 				<div class="form-group row">
-					<div class="form-group col-xs-1 div_input">
-						<label for="pais_{$marketplace['id_amazon_reglas']}">País</label>
-						<div class="input-group">
-							<span class="input-group-addon"><i class="icon icon-globe"></i></span>
-							<input type="text" name="pais_{$marketplace['id_amazon_reglas']}" id="pais_{$marketplace['id_amazon_reglas']}" value="{$marketplace['pais']|escape:'html':'UTF-8'}" class="form-control texto pais" readonly required>
+					<div class="form-group col-xs-10">
+						<div class="form-group col-xs-2 div_input">
+							<label for="pais_{$marketplace['id_amazon_reglas']}">País</label><br>
+							<div class="input-group">
+								<span class="input-group-addon"><i class="icon icon-globe"></i></span>
+								<input type="text" name="pais_{$marketplace['id_amazon_reglas']}" id="pais_{$marketplace['id_amazon_reglas']}" value="{$marketplace['pais']|escape:'html':'UTF-8'}" class="form-control texto pais" readonly required>
+							</div>
+						</div>
+						<div class="form-group col-xs-1 div_input">
+							<label for="codigo_{$marketplace['id_amazon_reglas']}">Código</label>
+							<div class="input-group">
+								<span class="input-group-addon"><i class="icon icon-code"></i></span>
+								<input type="text" name="codigo_{$marketplace['id_amazon_reglas']}" id="codigo_{$marketplace['id_amazon_reglas']}" value="{$marketplace['codigo']|escape:'html':'UTF-8'}" class="form-control texto codigo" readonly required>
+							</div>
+						</div>
+						<div class="form-group col-xs-1 div_input">
+							<label for="moneda_{$marketplace['id_amazon_reglas']}">Moneda</label>
+							<div class="input-group">
+								<span class="input-group-addon"><i class="icon icon-money"></i></span>
+								<input type="text" name="moneda_{$marketplace['id_amazon_reglas']}" id="moneda_{$marketplace['id_amazon_reglas']}" value="{$marketplace['moneda']|escape:'html':'UTF-8'}" class="form-control texto" readonly required>
+							</div>
+						</div>
+						<div class="form-group col-xs-1 div_input">
+							<label for="cambio_{$marketplace['id_amazon_reglas']}">Cambio</label>
+							<div class="input-group">
+								<span class="input-group-addon"><i class="icon icon-exchange"></i></span>
+								<input type="text" name="cambio_{$marketplace['id_amazon_reglas']}" id="cambio_{$marketplace['id_amazon_reglas']}" value="{$marketplace['cambio']|escape:'html':'UTF-8'}" class="form-control numerico" required>
+							</div>
+						</div>
+						<div class="form-group col-xs-1 div_input">
+							<label for="margen_minimo_{$marketplace['id_amazon_reglas']}">Margen Mínimo</label>
+							<div class="input-group">
+								<span class="input-group-addon">%</span>
+								<input type="text" name="margen_minimo_{$marketplace['id_amazon_reglas']}" id="margen_minimo_{$marketplace['id_amazon_reglas']}" value="{$marketplace['margen_minimo']|escape:'html':'UTF-8'}" class="form-control numerico" required>
+							</div>
+						</div>
+						<div class="form-group col-xs-1 div_input">
+							<label for="margen_minimo_c_{$marketplace['id_amazon_reglas']}">Mínimo C</label>
+							<div class="input-group">
+								<span class="input-group-addon">%</span>
+								<input type="text" name="margen_minimo_c_{$marketplace['id_amazon_reglas']}" id="margen_minimo_c_{$marketplace['id_amazon_reglas']}" value="{$marketplace['margen_minimo_c']|escape:'html':'UTF-8'}" class="form-control numerico" required>
+							</div>
+						</div>
+						<div class="form-group col-xs-1 div_input">
+							<label for="margen_minimo_outlet_{$marketplace['id_amazon_reglas']}">Mínimo Outlet</label>
+							<div class="input-group">
+								<span class="input-group-addon">%</span>
+								<input type="text" name="margen_minimo_outlet_{$marketplace['id_amazon_reglas']}" id="margen_minimo_outlet_{$marketplace['id_amazon_reglas']}" value="{$marketplace['margen_minimo_outlet']|escape:'html':'UTF-8'}" class="form-control numerico" required>
+							</div>
+						</div>
+						<div class="form-group col-xs-1 div_input">
+							<label for="margen_minimo_sin_stock_{$marketplace['id_amazon_reglas']}">Mínimo Sin Stock</label>
+							<div class="input-group">
+								<span class="input-group-addon">%</span>
+								<input type="text" name="margen_minimo_sin_stock_{$marketplace['id_amazon_reglas']}" id="margen_minimo_sin_stock_{$marketplace['id_amazon_reglas']}" value="{$marketplace['margen_minimo_sin_stock']|escape:'html':'UTF-8'}" class="form-control numerico" required>
+							</div>
+						</div>
+						<div class="form-group col-xs-1 div_input">
+							<label for="coste_track_{$marketplace['id_amazon_reglas']}">Coste Tracked</label>
+							<div class="input-group">
+								<span class="input-group-addon"><i class="icon icon-euro"></i></span>
+								<input type="text" name="coste_track_{$marketplace['id_amazon_reglas']}" id="coste_track_{$marketplace['id_amazon_reglas']}" value="{$marketplace['coste_track']|escape:'html':'UTF-8'}" class="form-control numerico" required>
+							</div>
+						</div>
+						<div class="form-group col-xs-1 div_input">
+							<label for="coste_sign_{$marketplace['id_amazon_reglas']}">Coste Signed</label>
+							<div class="input-group">
+								<span class="input-group-addon"><i class="icon icon-euro"></i></span>
+								<input type="text" name="coste_sign_{$marketplace['id_amazon_reglas']}" id="coste_sign_{$marketplace['id_amazon_reglas']}" value="{$marketplace['coste_sign']|escape:'html':'UTF-8'}" class="form-control numerico" required>
+							</div>
 						</div>
 					</div>
-					<div class="form-group col-xs-1 div_input">
-						<label for="codigo_{$marketplace['id_amazon_reglas']}">Código</label>
-						<div class="input-group">
-							<span class="input-group-addon"><i class="icon icon-code"></i></span>
-							<input type="text" name="codigo_{$marketplace['id_amazon_reglas']}" id="codigo_{$marketplace['id_amazon_reglas']}" value="{$marketplace['codigo']|escape:'html':'UTF-8'}" class="form-control texto codigo" readonly required>
-						</div>
-					</div>
-					<div class="form-group col-xs-1 div_input">
-						<label for="moneda_{$marketplace['id_amazon_reglas']}">Moneda</label>
-						<div class="input-group">
-							<span class="input-group-addon"><i class="icon icon-money"></i></span>
-							<input type="text" name="moneda_{$marketplace['id_amazon_reglas']}" id="moneda_{$marketplace['id_amazon_reglas']}" value="{$marketplace['moneda']|escape:'html':'UTF-8'}" class="form-control texto" readonly required>
-						</div>
-					</div>
-					<div class="form-group col-xs-1 div_input">
-						<label for="cambio_{$marketplace['id_amazon_reglas']}">Cambio</label>
-						<div class="input-group">
-							<span class="input-group-addon"><i class="icon icon-exchange"></i></span>
-							<input type="text" name="cambio_{$marketplace['id_amazon_reglas']}" id="cambio_{$marketplace['id_amazon_reglas']}" value="{$marketplace['cambio']|escape:'html':'UTF-8'}" class="form-control numerico" required>
-						</div>
-					</div>
-					<div class="form-group col-xs-1 div_input">
-						<label for="margen_minimo_{$marketplace['id_amazon_reglas']}">Margen Mínimo</label>
-						<div class="input-group">
-							<span class="input-group-addon">%</span>
-							<input type="text" name="margen_minimo_{$marketplace['id_amazon_reglas']}" id="margen_minimo_{$marketplace['id_amazon_reglas']}" value="{$marketplace['margen_minimo']|escape:'html':'UTF-8'}" class="form-control numerico" required>
-						</div>
-					</div>
-					<div class="form-group col-xs-1 div_input">
-						<label for="margen_minimo_c_{$marketplace['id_amazon_reglas']}">Margen Mínimo C</label>
-						<div class="input-group">
-							<span class="input-group-addon">%</span>
-							<input type="text" name="margen_minimo_c_{$marketplace['id_amazon_reglas']}" id="margen_minimo_c_{$marketplace['id_amazon_reglas']}" value="{$marketplace['margen_minimo_c']|escape:'html':'UTF-8'}" class="form-control numerico" required>
-						</div>
-					</div>
-					<div class="form-group col-xs-1 div_input">
-						<label for="margen_minimo_outlet_{$marketplace['id_amazon_reglas']}">Margen Mínimo Outlet</label>
-						<div class="input-group">
-							<span class="input-group-addon">%</span>
-							<input type="text" name="margen_minimo_outlet_{$marketplace['id_amazon_reglas']}" id="margen_minimo_outlet_{$marketplace['id_amazon_reglas']}" value="{$marketplace['margen_minimo_outlet']|escape:'html':'UTF-8'}" class="form-control numerico" required>
-						</div>
-					</div>
-					<div class="form-group col-xs-1 div_input">
-						<label for="coste_track_{$marketplace['id_amazon_reglas']}">Coste Tracked</label>
-						<div class="input-group">
-							<span class="input-group-addon"><i class="icon icon-euro"></i></span>
-							<input type="text" name="coste_track_{$marketplace['id_amazon_reglas']}" id="coste_track_{$marketplace['id_amazon_reglas']}" value="{$marketplace['coste_track']|escape:'html':'UTF-8'}" class="form-control numerico" required>
-						</div>
-					</div>
-					<div class="form-group col-xs-1 div_input">
-						<label for="coste_sign_{$marketplace['id_amazon_reglas']}">Coste Signed</label>
-						<div class="input-group">
-							<span class="input-group-addon"><i class="icon icon-euro"></i></span>
-							<input type="text" name="coste_sign_{$marketplace['id_amazon_reglas']}" id="coste_sign_{$marketplace['id_amazon_reglas']}" value="{$marketplace['coste_sign']|escape:'html':'UTF-8'}" class="form-control numerico" required>
-						</div>
-					</div>
-					<div class="form-group col-xs-1 div_input">
-						<label for="accion_{$marketplace['id_amazon_reglas']}">Acción</label>
-						<div class="select-group">
-							<span class="select-group-addon"><i class="icon icon-wrench"></i> </span>
-							<select id="accion_{$marketplace['id_amazon_reglas']}" name="accion_{$marketplace['id_amazon_reglas']}" class="form-control">
-								<option value="start" {if $marketplace['accion']|escape:'html':'UTF-8' == 'start'}selected{/if}> start</option>
-								<option value="stop" {if $marketplace['accion']|escape:'html':'UTF-8' == 'stop'}selected{/if}> stop</option>								
-							</select>							
-						</div>					
-					</div>			
+					<div class="form-group col-xs-2">
+						<div class="form-group col-xs-4 div_input">
+							<label for="accion_{$marketplace['id_amazon_reglas']}">Acción</label>
+							<div class="select-group">
+								<span class="select-group-addon"><i class="icon icon-wrench"></i> </span>
+								<select id="accion_{$marketplace['id_amazon_reglas']}" name="accion_{$marketplace['id_amazon_reglas']}" class="form-control">
+									<option value="start" {if $marketplace['accion']|escape:'html':'UTF-8' == 'start'}selected{/if}> start</option>
+									<option value="stop" {if $marketplace['accion']|escape:'html':'UTF-8' == 'stop'}selected{/if}> stop</option>								
+								</select>							
+							</div>					
+						</div>			
 
-					<button type="submit" value="{$marketplace['id_amazon_reglas']}"  id="eliminar_{$marketplace['id_amazon_reglas']}" name="eliminar_marketplace" class="btn btn-default boton_eliminar">            
-						<i class="process-icon-cancel icon-cancel"></i>Eliminar       
-					</button>					
+						<div class="form-group col-xs-3 div_input">
+							<button type="submit" value="{$marketplace['id_amazon_reglas']}"  id="exportar_{$marketplace['id_amazon_reglas']}" name="exportar_marketplace" class="btn btn-default">            
+								<i class="process-icon-download icon-download"></i>Exportar       
+							</button>
+						</div>
+
+						<div class="form-group col-xs-3 div_input">
+							<button type="submit" value="{$marketplace['id_amazon_reglas']}"  id="eliminar_{$marketplace['id_amazon_reglas']}" name="eliminar_marketplace" class="btn btn-default boton_eliminar">            
+								<i class="process-icon-cancel icon-cancel"></i>Eliminar       
+							</button>
+						</div>
+					</div>					
 				</div>
 
 				<hr>
@@ -173,9 +193,9 @@
 		<button type="submit" id="exportar_reglas" name="exportar_reglas" class="btn btn-default pull-right">            
 			<i class="process-icon-export icon-export"></i> Exportar reglas      
 		</button>
-		<button type="submit" id="exportar_productos_pesados" name="exportar_productos_pesados" class="btn btn-default pull-right">            
+		{* <button type="submit" id="exportar_productos_pesados" name="exportar_productos_pesados" class="btn btn-default pull-right">            
 			<i class="process-icon-anchor icon-anchor"></i> Productos Pesados      
-		</button>	
+		</button>	 *}
 	</form>
 	
 </div>

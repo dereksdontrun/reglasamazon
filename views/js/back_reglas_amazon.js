@@ -73,8 +73,9 @@ function start() {
         nuevo_marketplace.classList.add('row','form-group'); 
         nuevo_marketplace.id = `nuevo_${id}`;       
         nuevo_marketplace.innerHTML =  `
-            <div class="form-group col-xs-1 div_input">
-                <label for="pais_nuevo_${id}">País</label>
+        <div class="form-group col-xs-10">
+            <div class="form-group col-xs-2 div_input">
+                <label for="pais_nuevo_${id}">País</label><br>
                 <div class="input-group">
 					<span class="input-group-addon"><i class="icon icon-globe"></i></span>
                     <input type="text" name="pais_nuevo_${id}" id="pais_nuevo_${id}" value="" class="form-control texto pais" required>
@@ -109,17 +110,24 @@ function start() {
                 </div>
             </div>
             <div class="form-group col-xs-1 div_input">
-                <label for="margen_minimo_c_nuevo_${id}">Margen Mínimo C</label>
+                <label for="margen_minimo_c_nuevo_${id}">Mínimo C</label>
                 <div class="input-group">
                     <span class="input-group-addon">%</span>
                     <input type="text" name="margen_minimo_c_nuevo_${id}" id="margen_minimo_c_nuevo_${id}" value="" class="form-control numerico" required>
                 </div>
             </div>
             <div class="form-group col-xs-1 div_input">
-                <label for="margen_minimo_outlet_nuevo_${id}">Margen Mínimo Outlet</label>
+                <label for="margen_minimo_outlet_nuevo_${id}">Mínimo Outlet</label>
                 <div class="input-group">
                     <span class="input-group-addon">%</span>
                     <input type="text" name="margen_minimo_outlet_nuevo_${id}" id="margen_minimo_outlet_nuevo_${id}" value="" class="form-control numerico" required>
+                </div>
+            </div>
+            <div class="form-group col-xs-1 div_input">
+                <label for="margen_minimo_sin_stock_nuevo_${id}">Mínimo Sin Stock</label>
+                <div class="input-group">
+                    <span class="input-group-addon">%</span>
+                    <input type="text" name="margen_minimo_sin_stock_nuevo_${id}" id="margen_minimo_sin_stock_nuevo_${id}" value="" class="form-control numerico" required>
                 </div>
             </div>
             <div class="form-group col-xs-1 div_input">
@@ -136,7 +144,9 @@ function start() {
                     <input type="text" name="coste_sign_nuevo_${id}" id="coste_sign_nuevo_${id}" value="" class="form-control numerico" required>
                 </div>
             </div>
-            <div class="form-group col-xs-1 div_input">
+        </div>
+        <div class="form-group col-xs-2">
+            <div class="form-group col-xs-4 div_input">
                 <label for="accion_nuevo_${id}">Acción</label>
                 <div class="select-group">
                     <span class="select-group-addon"><i class="icon icon-wrench"></i> </span>
@@ -146,9 +156,19 @@ function start() {
                     </select>							
                 </div>					
             </div>
-            <button type="submit" value="nuevo_${id}"  id="eliminar_nuevo_${id}" name="eliminar_nuevo_${id}" class="btn btn-default boton_eliminar">            
-                <i class="process-icon-cancel icon-cancel"></i>Eliminar       
-            </button>
+
+            <div class="form-group col-xs-3 div_input">
+                <button type="submit" value="nuevo_${id}"  id="exportar_nuevo_${id}" name="exportar_nuevo_${id}" class="btn btn-default">            
+                    <i class="process-icon-download icon-download"></i>Exportar      
+                </button>
+            </div>
+
+            <div class="form-group col-xs-3 div_input">
+                <button type="submit" value="nuevo_${id}"  id="eliminar_nuevo_${id}" name="eliminar_nuevo_${id}" class="btn btn-default boton_eliminar">            
+                    <i class="process-icon-cancel icon-cancel"></i>Eliminar       
+                </button>
+            </div>
+        </div>
             <hr>`;
         
         document.querySelector('#contenedor_marketplaces').appendChild(nuevo_marketplace);
