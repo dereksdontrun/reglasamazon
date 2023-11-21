@@ -46,7 +46,8 @@ class Reglasamazon extends Module
         $this->bootstrap = true;
 
         //21/06/2023 Variable para almacenar los proveedores a los que se aplicará la venta sin stock y forzado a marketplaces Amazon
-        $this->proveedores_sin_stock = array(65, 53);
+        //21/11/2023 Añadimos Redstring
+        $this->proveedores_sin_stock = array(65, 53, 24);
 
         parent::__construct();
 
@@ -207,26 +208,8 @@ class Reglasamazon extends Module
             $preparacion = Configuration::get('COSTE_PREPARACION_PRODUCTO');
 
             $sql_productos = "SELECT IFNULL(pat.reference, pro.reference) AS sku, 
-            REPLACE(
-            CASE #cuando es España, pvp real más coste envío
-            WHEN are.codigo = 'ES' THEN (
-                            CASE
-                            WHEN (#si hay pvp descuento > 0 cogemos descuento, si no pvp normal
-                                CASE 
-                                    WHEN spp.reduction_type = 'percentage' THEN ROUND(((pro.price*((tax.rate/100)+1)) - (pro.price*((tax.rate/100)+1) * spp.reduction)),2)	
-                                    WHEN spp.reduction_type = 'amount'  THEN ROUND(((pro.price*((tax.rate/100)+1)) - spp.reduction),2)	
-                                    ELSE 0
-                                END) > 0 THEN (
-                                    CASE 
-                                        WHEN spp.reduction_type = 'percentage' THEN ROUND(((pro.price*((tax.rate/100)+1)) - (pro.price*((tax.rate/100)+1) * spp.reduction)),2)	
-                                        WHEN spp.reduction_type = 'amount'  THEN ROUND(((pro.price*((tax.rate/100)+1)) - spp.reduction),2)	
-                                        ELSE 0
-                                    END)
-                            ELSE ROUND(pro.price*((tax.rate/100)+1),2)
-                            END
-                        ) + are.coste_track
-            ELSE ( #Resto marketplaces, calculamos total, si el total es > 30 , usamos coste signed, y hacemos cambio de moneda. Aquí miramos si es sin stock, outlet, C o resto
-                    CASE #case para saber si es sin stock, outlet, c o normal
+            REPLACE( #quitamos la limitación de precio mínimo para ES que pusimos para no competir con nuestra web
+                CASE #case para saber si es sin stock, outlet, c o normal
                         WHEN (ava.quantity <= 0 AND pro.id_supplier IN (".implode($this->proveedores_sin_stock, ',').") AND ava.out_of_stock = 1) THEN (
                             CASE 
                             WHEN ((pro.wholesale_price*((tax.rate/100)+1) * (((are.margen_minimo_sin_stock + 15)/100) + 1)) + $preparacion) > 30 THEN 
@@ -256,8 +239,6 @@ class Reglasamazon extends Module
                             END
                         ) #fin case no es outlet ni C        
                     END
-                )
-            END
             ,'.',',')
             AS 'minimum-seller-allowed-price',
             REPLACE(
@@ -705,3 +686,124 @@ class Reglasamazon extends Module
         $this->context->controller->addCSS($this->_path.'/views/css/front.css');
     }
 }
+
+// Consulta de exportar_reglas con coste por abajo limitado para ES
+/*
+$sql_productos = "SELECT IFNULL(pat.reference, pro.reference) AS sku, 
+REPLACE(
+CASE #cuando es España, pvp real más coste envío
+WHEN are.codigo = 'ES' THEN (
+                CASE
+                WHEN (#si hay pvp descuento > 0 cogemos descuento, si no pvp normal
+                    CASE 
+                        WHEN spp.reduction_type = 'percentage' THEN ROUND(((pro.price*((tax.rate/100)+1)) - (pro.price*((tax.rate/100)+1) * spp.reduction)),2)	
+                        WHEN spp.reduction_type = 'amount'  THEN ROUND(((pro.price*((tax.rate/100)+1)) - spp.reduction),2)	
+                        ELSE 0
+                    END) > 0 THEN (
+                        CASE 
+                            WHEN spp.reduction_type = 'percentage' THEN ROUND(((pro.price*((tax.rate/100)+1)) - (pro.price*((tax.rate/100)+1) * spp.reduction)),2)	
+                            WHEN spp.reduction_type = 'amount'  THEN ROUND(((pro.price*((tax.rate/100)+1)) - spp.reduction),2)	
+                            ELSE 0
+                        END)
+                ELSE ROUND(pro.price*((tax.rate/100)+1),2)
+                END
+            ) + are.coste_track
+ELSE ( #Resto marketplaces, calculamos total, si el total es > 30 , usamos coste signed, y hacemos cambio de moneda. Aquí miramos si es sin stock, outlet, C o resto
+        CASE #case para saber si es sin stock, outlet, c o normal
+            WHEN (ava.quantity <= 0 AND pro.id_supplier IN (".implode($this->proveedores_sin_stock, ',').") AND ava.out_of_stock = 1) THEN (
+                CASE 
+                WHEN ((pro.wholesale_price*((tax.rate/100)+1) * (((are.margen_minimo_sin_stock + 15)/100) + 1)) + $preparacion) > 30 THEN 
+                        ROUND((( ((pro.wholesale_price*((tax.rate/100)+1)) + are.coste_sign + $preparacion) * ( ((are.margen_minimo_sin_stock + 15)/100) + 1) )) * are.cambio, 2)
+                ELSE ROUND((( ((pro.wholesale_price*((tax.rate/100)+1)) + are.coste_track + $preparacion) * ( ((are.margen_minimo_sin_stock + 15)/100) + 1) )) * are.cambio, 2)
+                END
+            ) #fin case es sin stock con permitir pedido
+            WHEN (SELECT id_product FROM lafrips_category_product WHERE id_category = 319 AND id_product = pro.id_product) THEN (
+                CASE 
+                WHEN ((pro.wholesale_price*((tax.rate/100)+1) * (((are.margen_minimo_outlet + 15)/100) + 1)) + $preparacion) > 30 THEN 
+                        ROUND((( ((pro.wholesale_price*((tax.rate/100)+1)) + are.coste_sign + $preparacion) * ( ((are.margen_minimo_outlet + 15)/100) + 1) )) * are.cambio, 2)
+                ELSE ROUND((( ((pro.wholesale_price*((tax.rate/100)+1)) + are.coste_track + $preparacion) * ( ((are.margen_minimo_outlet + 15)/100) + 1) )) * are.cambio, 2)
+                END
+            ) #fin case es outlet
+            WHEN (con.abc = 'C' OR con.consumo IS NULL) THEN (
+                CASE 
+                WHEN ((pro.wholesale_price*((tax.rate/100)+1) * (((are.margen_minimo_c + 15)/100) + 1)) + $preparacion) > 30 THEN 
+                        ROUND((( ((pro.wholesale_price*((tax.rate/100)+1)) + are.coste_sign + $preparacion) * ( ((are.margen_minimo_c + 15)/100) + 1) )) * are.cambio, 2)
+                ELSE ROUND((( ((pro.wholesale_price*((tax.rate/100)+1)) + are.coste_track + $preparacion) * ( ((are.margen_minimo_c + 15)/100) + 1) )) * are.cambio, 2)
+                END
+            ) #fin case es C
+            ELSE (
+                CASE 
+                WHEN ((pro.wholesale_price*((tax.rate/100)+1) * (((are.margen_minimo + 15)/100) + 1)) + $preparacion) > 30 THEN  
+                        ROUND((( ((pro.wholesale_price*((tax.rate/100)+1)) + are.coste_sign + $preparacion) * ( ((are.margen_minimo + 15)/100) + 1) )) * are.cambio, 2)
+                ELSE ROUND((( ((pro.wholesale_price*((tax.rate/100)+1)) + are.coste_track + $preparacion) * ( ((are.margen_minimo + 15)/100) + 1) )) * are.cambio, 2)
+                END
+            ) #fin case no es outlet ni C        
+        END
+    )
+END
+,'.',',')
+AS 'minimum-seller-allowed-price',
+REPLACE(
+CASE #case para saber si es sin stock, outlet, c o normal
+    WHEN (ava.quantity <= 0 AND pro.id_supplier IN (".implode($this->proveedores_sin_stock, ',').") AND ava.out_of_stock = 1) THEN (
+        CASE 
+        WHEN ((pro.price*((tax.rate/100)+1) * (((are.margen_minimo_sin_stock + 15)/100) + 1)) + $preparacion) > 30 THEN 
+                ROUND(((pro.price*((tax.rate/100)+1) + are.coste_sign + $preparacion) * ( ((are.margen_minimo_sin_stock + 15)/100) + 1)) * are.cambio ,2)		
+        ELSE ROUND(((pro.price*((tax.rate/100)+1) + are.coste_track + $preparacion) * ( ((are.margen_minimo_sin_stock + 15)/100) + 1)) * are.cambio ,2)
+        END
+    ) #fin case es sin stock con permitir pedido
+    WHEN (SELECT id_product FROM lafrips_category_product WHERE id_category = 319 AND id_product = pro.id_product) THEN (
+        CASE 
+        WHEN ((pro.price*((tax.rate/100)+1) * (((are.margen_minimo_outlet + 15)/100) + 1)) + $preparacion) > 30 THEN 
+                ROUND(((pro.price*((tax.rate/100)+1) + are.coste_sign + $preparacion) * ( ((are.margen_minimo_outlet + 15)/100) + 1)) * are.cambio ,2)		
+        ELSE ROUND(((pro.price*((tax.rate/100)+1) + are.coste_track + $preparacion) * ( ((are.margen_minimo_outlet + 15)/100) + 1)) * are.cambio ,2)
+        END
+    ) #fin case es outlet
+    WHEN (con.abc = 'C' OR con.consumo IS NULL) THEN (
+        CASE 
+        WHEN ((pro.price*((tax.rate/100)+1) * (((are.margen_minimo_c + 15)/100) + 1)) + $preparacion) > 30 THEN 
+                ROUND(((pro.price*((tax.rate/100)+1) + are.coste_sign + $preparacion) * ( ((are.margen_minimo_c + 15)/100) + 1)) * are.cambio ,2)		
+        ELSE ROUND(((pro.price*((tax.rate/100)+1) + are.coste_track + $preparacion) * ( ((are.margen_minimo_c + 15)/100) + 1)) * are.cambio ,2)
+        END
+    ) #fin case es C
+    ELSE (
+        CASE 
+        WHEN ((pro.price*((tax.rate/100)+1) * (((are.margen_minimo + 15)/100) + 1)) + $preparacion) > 30 THEN 
+                ROUND(((pro.price*((tax.rate/100)+1) + are.coste_sign + $preparacion) * ( ((are.margen_minimo + 15)/100) + 1)) * are.cambio ,2)		
+        ELSE ROUND(((pro.price*((tax.rate/100)+1) + are.coste_track + $preparacion) * ( ((are.margen_minimo + 15)/100) + 1)) * are.cambio ,2)
+        END
+    ) #fin case no es outlet ni C        
+END
+,'.',',')
+AS 'maximum-seller-allowed-price', #si el pvp sin descuentos + coste track es > 30, se pone signed. Luego se añade amazon y margen mínimo y cambio moneda  
+are.codigo AS 'country-code', 
+are.moneda AS 'currency-code', 
+'$nombre_regla' AS 'rule-name', #08/03/2022 posibilidad de cambiar nombre regla
+are.accion AS 'rule-action'
+FROM lafrips_product pro
+JOIN lafrips_stock_available ava ON pro.id_product = ava.id_product #AND ava.id_product_attribute = 0
+LEFT JOIN lafrips_product_attribute pat ON pat.id_product = ava.id_product AND pat.id_product_attribute = ava.id_product_attribute
+JOIN frik_amazon_reglas are
+JOIN lafrips_tax_rule tar ON pro.id_tax_rules_group = tar.id_tax_rules_group AND tar.id_country = 6
+JOIN lafrips_tax tax ON tax.id_tax = tar.id_tax
+LEFT JOIN lafrips_specific_price spp ON ava.id_product =  spp.id_product
+    AND spp.from_quantity = 1    
+    AND spp.id_specific_price_rule = 0
+    AND spp.id_customer = 0
+    AND ( spp.to = '0000-00-00 00:00:00' OR (spp.from < NOW() AND spp.to > NOW() ))
+LEFT JOIN lafrips_consumos con ON con.id_product = ava.id_product AND con.id_product_attribute = ava.id_product_attribute
+WHERE pro.id_product IN ( #categorías aAmazon
+SELECT id_product FROM lafrips_category_product WHERE id_category IN (2164, 2347, 2351, 2356, 2360, 2366, 2368, 2372, 2383, 2445, 2446, 2452))
+-- AND ava.quantity > 0
+AND (ava.quantity > 0 OR (ava.quantity <= 0 AND pro.id_supplier IN (".implode($this->proveedores_sin_stock, ',').") AND ava.out_of_stock = 1)) #productos con stock o de cerdá y permitir pedido (hasta que metamos el resto de sin stock)
+AND #si el producto tiene atributos, evitamos el producto base, solo el atributo con stock
+(
+    CASE
+        WHEN (SELECT COUNT(id_product) FROM lafrips_stock_available WHERE id_product = pro.id_product) > 1 THEN ava.id_product_attribute != 0
+        ELSE ava.id_product_attribute = 0
+    END
+)
+AND pro.active = 1
+AND pro.cache_is_pack = 0
+ORDER BY pro.id_product, sku, are.codigo ASC";
+            */

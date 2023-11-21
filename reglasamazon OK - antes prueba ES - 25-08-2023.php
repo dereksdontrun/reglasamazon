@@ -45,6 +45,9 @@ class Reglasamazon extends Module
          */
         $this->bootstrap = true;
 
+        //21/06/2023 Variable para almacenar los proveedores a los que se aplicará la venta sin stock y forzado a marketplaces Amazon
+        $this->proveedores_sin_stock = array(65, 53);
+
         parent::__construct();
 
         $this->displayName = $this->l('Reglas de precios Amazon');
@@ -197,6 +200,8 @@ class Reglasamazon extends Module
 
             //04/04/2023 Añadimos para venta de productos sin stock en Amazon, añadimos margen mínimo sin stock. Por ahora SOLO para Cerdá, para ello en la condición del where, además de tener categoría amazon, cambiamos la condición de stock AND ava.quantity > 0 por:
             // AND (ava.quantity > 0 OR (ava.quantity <= 0 AND pro.id_manufacturer IN (76,81) AND ava.out_of_stock = 1)), es decir, o con stock, o Cerdá con permitir pedido.
+            //21/06/2023 Pasamos a utilizar id_supplier de Cerdá en lugar de fabricante 
+            // AND (ava.quantity > 0 OR (ava.quantity <= 0 AND pro.id_supplier IN ('.implode($this->proveedores_sin_stock, ',').') AND ava.out_of_stock = 1))
 
             //sacamos el coste de preparación, que está guardado en lafrips_configuration y lo sumamos a cada precio mínimo
             $preparacion = Configuration::get('COSTE_PREPARACION_PRODUCTO');
@@ -222,7 +227,7 @@ class Reglasamazon extends Module
                         ) + are.coste_track
             ELSE ( #Resto marketplaces, calculamos total, si el total es > 30 , usamos coste signed, y hacemos cambio de moneda. Aquí miramos si es sin stock, outlet, C o resto
                     CASE #case para saber si es sin stock, outlet, c o normal
-                        WHEN (ava.quantity <= 0 AND pro.id_manufacturer IN (76,81) AND ava.out_of_stock = 1) THEN (
+                        WHEN (ava.quantity <= 0 AND pro.id_supplier IN (".implode($this->proveedores_sin_stock, ',').") AND ava.out_of_stock = 1) THEN (
                             CASE 
                             WHEN ((pro.wholesale_price*((tax.rate/100)+1) * (((are.margen_minimo_sin_stock + 15)/100) + 1)) + $preparacion) > 30 THEN 
                                     ROUND((( ((pro.wholesale_price*((tax.rate/100)+1)) + are.coste_sign + $preparacion) * ( ((are.margen_minimo_sin_stock + 15)/100) + 1) )) * are.cambio, 2)
@@ -257,7 +262,7 @@ class Reglasamazon extends Module
             AS 'minimum-seller-allowed-price',
             REPLACE(
             CASE #case para saber si es sin stock, outlet, c o normal
-                WHEN (ava.quantity <= 0 AND pro.id_manufacturer IN (76,81) AND ava.out_of_stock = 1) THEN (
+                WHEN (ava.quantity <= 0 AND pro.id_supplier IN (".implode($this->proveedores_sin_stock, ',').") AND ava.out_of_stock = 1) THEN (
                     CASE 
                     WHEN ((pro.price*((tax.rate/100)+1) * (((are.margen_minimo_sin_stock + 15)/100) + 1)) + $preparacion) > 30 THEN 
                             ROUND(((pro.price*((tax.rate/100)+1) + are.coste_sign + $preparacion) * ( ((are.margen_minimo_sin_stock + 15)/100) + 1)) * are.cambio ,2)		
@@ -307,7 +312,7 @@ class Reglasamazon extends Module
             WHERE pro.id_product IN ( #categorías aAmazon
             SELECT id_product FROM lafrips_category_product WHERE id_category IN (2164, 2347, 2351, 2356, 2360, 2366, 2368, 2372, 2383, 2445, 2446, 2452))
             -- AND ava.quantity > 0
-            AND (ava.quantity > 0 OR (ava.quantity <= 0 AND pro.id_manufacturer IN (76,81) AND ava.out_of_stock = 1)) #productos con stock o de cerdá y permitir pedido (hasta que metamos el resto de sin stock)
+            AND (ava.quantity > 0 OR (ava.quantity <= 0 AND pro.id_supplier IN (".implode($this->proveedores_sin_stock, ',').") AND ava.out_of_stock = 1)) #productos con stock o de cerdá y permitir pedido (hasta que metamos el resto de sin stock)
             AND #si el producto tiene atributos, evitamos el producto base, solo el atributo con stock
             (
                 CASE
@@ -436,11 +441,11 @@ class Reglasamazon extends Module
             //si el marketplace es ES no asignaremos regla de productos Pesados a los de más de 1 kg, pero asignaremos la de Productos No Prime ligeros, a los de venta sin stock con permitir pedidos.
             if ($codigo == 'ES') {
                 $sql_reglas = "CASE
-                WHEN (ava.quantity <= 0 AND pro.id_manufacturer IN (76,81) AND ava.out_of_stock = 1) THEN 'a'
+                WHEN (ava.quantity <= 0 AND pro.id_supplier IN (".implode($this->proveedores_sin_stock, ',').") AND ava.out_of_stock = 1) THEN 'a'
                 ELSE ''
                 END AS 'add-delete',
                 CASE
-                WHEN (ava.quantity <= 0 AND pro.id_manufacturer IN (76,81) AND ava.out_of_stock = 1) THEN 'Productos No Prime ligeros'
+                WHEN (ava.quantity <= 0 AND pro.id_supplier IN (".implode($this->proveedores_sin_stock, ',').") AND ava.out_of_stock = 1) THEN 'Productos No Prime ligeros'
                 ELSE ''
                 END AS 'merchant-shipping-group-name',";
             } else {
@@ -458,7 +463,7 @@ class Reglasamazon extends Module
             $preparacion = Configuration::get('COSTE_PREPARACION_PRODUCTO');
 
             //en principio sacamos todos, con o sin stock etc, ya que estamos actualizando stock
-            //AND (ava.quantity > 0 OR (ava.quantity <= 0 AND pro.id_manufacturer IN (76,81) AND ava.out_of_stock = 1))
+            //AND (ava.quantity > 0 OR (ava.quantity <= 0 AND pro.id_supplier IN (".implode($this->proveedores_sin_stock, ',').") AND ava.out_of_stock = 1))
             //indicamos en el JOIN de la tabla de reglas el marketplace del que sacar los datos, JOIN frik_amazon_reglas are ON are.codigo = $codigo
             //para handling ponemos 1 si no es sin stock para asegurarnos de que no quede 4 de una pasada anterior
             $sql_productos = "SELECT IFNULL(pat.reference, pro.reference) AS sku, 
@@ -471,12 +476,12 @@ class Reglasamazon extends Module
                 , 2) 
             ,'.',',') AS price,
             CASE
-            WHEN (ava.quantity <= 0 AND pro.id_manufacturer IN (76,81) AND ava.out_of_stock = 1) THEN 999
+            WHEN (ava.quantity <= 0 AND pro.id_supplier IN (".implode($this->proveedores_sin_stock, ',').") AND ava.out_of_stock = 1) THEN 999
             ELSE IF(ava.quantity < 0, 0, ava.quantity)
             END AS 'quantity',
             $sql_reglas            
             CASE
-            WHEN (ava.quantity <= 0 AND pro.id_manufacturer IN (76,81) AND ava.out_of_stock = 1) THEN 4
+            WHEN (ava.quantity <= 0 AND pro.id_supplier IN (".implode($this->proveedores_sin_stock, ',').") AND ava.out_of_stock = 1) THEN 4
             ELSE 1
             END AS 'handling-time'
             FROM lafrips_product pro
