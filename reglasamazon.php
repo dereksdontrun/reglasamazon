@@ -47,7 +47,8 @@ class Reglasamazon extends Module
 
         //21/06/2023 Variable para almacenar los proveedores a los que se aplicará la venta sin stock y forzado a marketplaces Amazon
         //21/11/2023 Añadimos Redstring
-        $this->proveedores_sin_stock = array(65, 53, 24);
+        //12/02/2024 Añadimos Erik
+        $this->proveedores_sin_stock = array(65, 53, 24, 8);
 
         parent::__construct();
 
