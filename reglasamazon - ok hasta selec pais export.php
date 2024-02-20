@@ -205,16 +205,8 @@ class Reglasamazon extends Module
             //21/06/2023 Pasamos a utilizar id_supplier de Cerdá en lugar de fabricante 
             // AND (ava.quantity > 0 OR (ava.quantity <= 0 AND pro.id_supplier IN ('.implode($this->proveedores_sin_stock, ',').') AND ava.out_of_stock = 1))
 
-            //19/02/2024 Añadimos la posibilidad de decidir para qué marketplaces queremos que se genere el archivo de reglas. Hemos puesto unos checks para cada marketplace con value el id de la tabla frik_amazon_reglas. Obtenemos del POST cuales están checked y hacemos implode para obtener los ids de la tabla frik_amazon_reglas y esto lo añadimos como condición en el where de la consulta
-            
-            if (isset($_POST['marketplaces_export_reglas']) && is_array($_POST['marketplaces_export_reglas'])) {
-                $solo_marketplaces = implode(",", $_POST['marketplaces_export_reglas']);
-            } else {
-                $solo_marketplaces = "0";
-            }
-
             //sacamos el coste de preparación, que está guardado en lafrips_configuration y lo sumamos a cada precio mínimo
-            $preparacion = Configuration::get('COSTE_PREPARACION_PRODUCTO');            
+            $preparacion = Configuration::get('COSTE_PREPARACION_PRODUCTO');
 
             $sql_productos = "SELECT IFNULL(pat.reference, pro.reference) AS sku, 
             REPLACE( #quitamos la limitación de precio mínimo para ES que pusimos para no competir con nuestra web
@@ -312,7 +304,6 @@ class Reglasamazon extends Module
             )
             AND pro.active = 1
             AND pro.cache_is_pack = 0
-            AND are.id_amazon_reglas IN (".$solo_marketplaces.")
             ORDER BY pro.id_product, sku, are.codigo ASC";
 
             if ($productos = Db::getInstance()->ExecuteS($sql_productos)){ 

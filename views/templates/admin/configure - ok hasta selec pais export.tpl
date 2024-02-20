@@ -67,16 +67,10 @@
 				<div class="form-group row">
 					<div class="form-group col-xs-10">
 						<div class="form-group col-xs-2 div_input">
-							<div class="col-xs-4 col-sm-4 col-md-4">
-								<label for="export_reglas_{$marketplace['id_amazon_reglas']}">Exportar</label>
-								<input type="checkbox" class="custom-control-input" name="marketplaces_export_reglas[]" id="export_reglas_{$marketplace['id_amazon_reglas']}" value="{$marketplace['id_amazon_reglas']}" checked>								
-							</div>
-							<div class="col-xs-8 col-sm-8 col-md-8">
-								<label for="pais_{$marketplace['id_amazon_reglas']}">País</label><br>
-								<div class="input-group">
-									<span class="input-group-addon"><i class="icon icon-globe"></i></span>
-									<input type="text" name="pais_{$marketplace['id_amazon_reglas']}" id="pais_{$marketplace['id_amazon_reglas']}" value="{$marketplace['pais']|escape:'html':'UTF-8'}" class="form-control texto pais" readonly required>
-								</div>
+							<label for="pais_{$marketplace['id_amazon_reglas']}">País</label><br>
+							<div class="input-group">
+								<span class="input-group-addon"><i class="icon icon-globe"></i></span>
+								<input type="text" name="pais_{$marketplace['id_amazon_reglas']}" id="pais_{$marketplace['id_amazon_reglas']}" value="{$marketplace['pais']|escape:'html':'UTF-8'}" class="form-control texto pais" readonly required>
 							</div>
 						</div>
 						<div class="form-group col-xs-1 div_input">
