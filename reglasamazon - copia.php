@@ -421,7 +421,6 @@ class Reglasamazon extends Module
         }
 
         //04/04/2023 Si se pulsa un botón lateral de Exportar (full catálogo)
-        //21/02/2024 Si el producto tiene categoría Prepedido 121 y no tiene stock físico deberá considerarse stock 0 independientemente de si tiene permitir pedido
         if (((bool)Tools::isSubmit('exportar_marketplace')) == true) {
             //se ha pulsado exportar en un marketplace almacenado. Obtenemos el id de la tabla con el value del botón pulsado y procesamos
             $id_marketplace = Tools::getValue('exportar_marketplace');
@@ -432,20 +431,12 @@ class Reglasamazon extends Module
 
             //si el marketplace es ES no asignaremos regla de productos Pesados a los de más de 1 kg, pero asignaremos la de Productos No Prime ligeros, a los de venta sin stock con permitir pedidos.
             if ($codigo == 'ES') {
-                $sql_reglas = "
-                CASE
-                    WHEN (ava.quantity <= 0 
-                        AND pro.id_supplier IN (".implode($this->proveedores_sin_stock, ',').") 
-                        AND ava.out_of_stock = 1 
-                        AND 121 NOT IN (SELECT id_category FROM lafrips_category_product WHERE id_product = pro.id_product)) 
-                    THEN 'a'
+                $sql_reglas = "CASE
+                WHEN (ava.quantity <= 0 AND pro.id_supplier IN (".implode($this->proveedores_sin_stock, ',').") AND ava.out_of_stock = 1) THEN 'a'
                 ELSE ''
                 END AS 'add-delete',
                 CASE
-                    WHEN (ava.quantity <= 0 
-                    AND pro.id_supplier IN (".implode($this->proveedores_sin_stock, ',').") 
-                    AND ava.out_of_stock = 1
-                    AND 121 NOT IN (SELECT id_category FROM lafrips_category_product WHERE id_product = pro.id_product)) THEN 'Productos No Prime ligeros'
+                WHEN (ava.quantity <= 0 AND pro.id_supplier IN (".implode($this->proveedores_sin_stock, ',').") AND ava.out_of_stock = 1) THEN 'Productos No Prime ligeros'
                 ELSE ''
                 END AS 'merchant-shipping-group-name',";
             } else {
@@ -476,22 +467,12 @@ class Reglasamazon extends Module
                 , 2) 
             ,'.',',') AS price,
             CASE
-            WHEN (
-                ava.quantity <= 0 
-                AND pro.id_supplier IN (".implode($this->proveedores_sin_stock, ',').") 
-                AND ava.out_of_stock = 1
-                AND 121 NOT IN (SELECT id_category FROM lafrips_category_product WHERE id_product = pro.id_product)) 
-            THEN 999
+            WHEN (ava.quantity <= 0 AND pro.id_supplier IN (".implode($this->proveedores_sin_stock, ',').") AND ava.out_of_stock = 1) THEN 999
             ELSE IF(ava.quantity < 0, 0, ava.quantity)
             END AS 'quantity',
             $sql_reglas            
             CASE
-            WHEN (
-                ava.quantity <= 0 
-                AND pro.id_supplier IN (".implode($this->proveedores_sin_stock, ',').") 
-                AND ava.out_of_stock = 1
-                AND 121 NOT IN (SELECT id_category FROM lafrips_category_product WHERE id_product = pro.id_product)) 
-            THEN 4
+            WHEN (ava.quantity <= 0 AND pro.id_supplier IN (".implode($this->proveedores_sin_stock, ',').") AND ava.out_of_stock = 1) THEN 4
             ELSE 1
             END AS 'handling-time'
             FROM lafrips_product pro
