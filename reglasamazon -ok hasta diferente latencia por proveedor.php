@@ -48,8 +48,7 @@ class Reglasamazon extends Module
         //21/06/2023 Variable para almacenar los proveedores a los que se aplicará la venta sin stock y forzado a marketplaces Amazon
         //21/11/2023 Añadimos Redstring
         //12/02/2024 Añadimos Erik
-        // 15/03/2024 121 - Distrineo y 111 - Noble 
-        $this->proveedores_sin_stock = array(65, 53, 24, 8, 121, 111);
+        $this->proveedores_sin_stock = array(65, 53, 24, 8);
 
         parent::__construct();
 
@@ -423,7 +422,6 @@ class Reglasamazon extends Module
 
         //04/04/2023 Si se pulsa un botón lateral de Exportar (full catálogo)
         //21/02/2024 Si el producto tiene categoría Prepedido 121 y no tiene stock físico deberá considerarse stock 0 independientemente de si tiene permitir pedido
-        //12/03/2024 A paritr de ahora la latencia o handling-time se asigna según el proveedor, sacándola de lafrips_mensaje_disponibilidad a la que haremos left join con id_lang = 1. Ponemos handling-time 7 por defecto si el proveedor no estuviera en la tabla y devuelve null
         if (((bool)Tools::isSubmit('exportar_marketplace')) == true) {
             //se ha pulsado exportar en un marketplace almacenado. Obtenemos el id de la tabla con el value del botón pulsado y procesamos
             $id_marketplace = Tools::getValue('exportar_marketplace');
@@ -486,26 +484,22 @@ class Reglasamazon extends Module
             THEN 999
             ELSE IF(ava.quantity < 0, 0, ava.quantity)
             END AS 'quantity',
-            $sql_reglas     
-            IFNULL(       
-                CASE
-                WHEN (
-                    ava.quantity <= 0 
-                    AND pro.id_supplier IN (".implode($this->proveedores_sin_stock, ',').") 
-                    AND ava.out_of_stock = 1
-                    AND 121 NOT IN (SELECT id_category FROM lafrips_category_product WHERE id_product = pro.id_product)) 
-                THEN med.latency
-                ELSE 1
-                END
-            , 7) 
-            AS 'handling-time'
+            $sql_reglas            
+            CASE
+            WHEN (
+                ava.quantity <= 0 
+                AND pro.id_supplier IN (".implode($this->proveedores_sin_stock, ',').") 
+                AND ava.out_of_stock = 1
+                AND 121 NOT IN (SELECT id_category FROM lafrips_category_product WHERE id_product = pro.id_product)) 
+            THEN 4
+            ELSE 1
+            END AS 'handling-time'
             FROM lafrips_product pro
             JOIN lafrips_stock_available ava ON pro.id_product = ava.id_product 
             LEFT JOIN lafrips_product_attribute pat ON pat.id_product = ava.id_product AND pat.id_product_attribute = ava.id_product_attribute
             JOIN frik_amazon_reglas are ON are.codigo = '$codigo'
             JOIN lafrips_tax_rule tar ON pro.id_tax_rules_group = tar.id_tax_rules_group AND tar.id_country = 6
             JOIN lafrips_tax tax ON tax.id_tax = tar.id_tax
-            LEFT JOIN lafrips_mensaje_disponibilidad med ON med.id_supplier = pro.id_supplier AND med.id_lang = 1
             WHERE pro.id_product IN ( #categorías aAmazon
             SELECT id_product FROM lafrips_category_product WHERE id_category IN (2164, 2347, 2351, 2356, 2360, 2366, 2368, 2372, 2383, 2445, 2446, 2452))            
             AND #si el producto tiene atributos, evitamos el producto base, solo el atributo con stock
