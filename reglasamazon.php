@@ -49,7 +49,9 @@ class Reglasamazon extends Module
         //21/11/2023 Añadimos Redstring
         //12/02/2024 Añadimos Erik
         // 15/03/2024 121 - Distrineo y 111 - Noble 
-        $this->proveedores_sin_stock = array(65, 53, 24, 8, 121, 111);
+        //03/06/2024 los sacmos de lafrips_configuration
+        // $this->proveedores_sin_stock = array(65, 53, 24, 8, 121, 111);
+        $this->proveedores_sin_stock = explode(",", Configuration::get('PROVEEDORES_VENTA_SIN_STOCK'));
 
         parent::__construct();
 
