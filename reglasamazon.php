@@ -437,6 +437,7 @@ class Reglasamazon extends Module
             $codigo = Db::getInstance()->getValue($sql_marketplace);                
 
             //si el marketplace es ES no asignaremos regla de productos Pesados a los de más de 1 kg, pero asignaremos la de Productos No Prime ligeros, a los de venta sin stock con permitir pedidos.
+            //10/10/2024 para ES, si no es de permitir pedidos ponemos "Plantilla estándar Amazon"
             if ($codigo == 'ES') {
                 $sql_reglas = "                
                 CASE
@@ -444,7 +445,7 @@ class Reglasamazon extends Module
                     AND pro.id_supplier IN (".implode(',',$this->proveedores_sin_stock).") 
                     AND ava.out_of_stock = 1
                     AND 121 NOT IN (SELECT id_category FROM lafrips_category_product WHERE id_product = pro.id_product)) THEN 'Productos No Prime ligeros'
-                ELSE ''
+                ELSE 'Plantilla estándar Amazon'
                 END AS 'merchant-shipping-group-name',";
             } else {
                 $sql_reglas = "
