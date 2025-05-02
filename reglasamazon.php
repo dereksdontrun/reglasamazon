@@ -428,6 +428,7 @@ class Reglasamazon extends Module
         //12/03/2024 A paritr de ahora la latencia o handling-time se asigna según el proveedor, sacándola de lafrips_mensaje_disponibilidad a la que haremos left join con id_lang = 1. Ponemos handling-time 7 por defecto si el proveedor no estuviera en la tabla y devuelve null
         //26/08/2024 Cambiamos la plantilla para enviar el pvp, el mínimo y el máximo. desaparece add-delete y se añade maximum_seller_allowed_price y minimum_seller_allowed_price
         //Para evitar el error a veces de que el pvp minimo queda por encima del pvp, sacamos en la consulta ese calculo, y luego, en los que quede así, ponemos como precio el minimo más 5 centimos. En la consulta añado un cáculo que es comparar price y minimum-seller-allowed-price
+        //09/12/2024 ignoramos los que tengan categoría 2374 No subir Amazon
         if (((bool)Tools::isSubmit('exportar_marketplace')) == true) {
             //se ha pulsado exportar en un marketplace almacenado. Obtenemos el id de la tabla con el value del botón pulsado y procesamos
             $id_marketplace = Tools::getValue('exportar_marketplace');
@@ -437,15 +438,17 @@ class Reglasamazon extends Module
             $codigo = Db::getInstance()->getValue($sql_marketplace);                
 
             //si el marketplace es ES no asignaremos regla de productos Pesados a los de más de 1 kg, pero asignaremos la de Productos No Prime ligeros, a los de venta sin stock con permitir pedidos.
-            //10/10/2024 para ES, si no es de permitir pedidos ponemos "Plantilla estándar Amazon"
+            //10/10/2024 para ES, si no es de permitir pedidos ponemos "Plantilla estandar Amazon" - LO QUITAMOS
+            //10/02/2025 Para evitar poner la plantilla No prime ligeros a los de Redstring y Amont que ahora van por dropshipping espceial cuando se venden sin stock, comprobamos que la latencia sea mayor que 1, que es la que tienen ahora incluso en venta sin stock AND IFNULL(med.latency, 7) > 1
             if ($codigo == 'ES') {
                 $sql_reglas = "                
                 CASE
                     WHEN (ava.quantity <= 0 
                     AND pro.id_supplier IN (".implode(',',$this->proveedores_sin_stock).") 
                     AND ava.out_of_stock = 1
+                    AND IFNULL(med.latency, 7) > 1
                     AND 121 NOT IN (SELECT id_category FROM lafrips_category_product WHERE id_product = pro.id_product)) THEN 'Productos No Prime ligeros'
-                ELSE 'Plantilla estándar Amazon'
+                ELSE ''
                 END AS 'merchant-shipping-group-name',";
             } else {
                 $sql_reglas = "
@@ -462,6 +465,7 @@ class Reglasamazon extends Module
             //AND (ava.quantity > 0 OR (ava.quantity <= 0 AND pro.id_supplier IN (".implode(',',$this->proveedores_sin_stock).") AND ava.out_of_stock = 1))
             //indicamos en el JOIN de la tabla de reglas el marketplace del que sacar los datos, JOIN frik_amazon_reglas are ON are.codigo = $codigo
             //para handling ponemos 1 si no es sin stock para asegurarnos de que no quede 4 de una pasada anterior
+            //02/05/2025 Añadimos ean para que sirva para subir nuevos productos
             $sql_productos = "SELECT IFNULL(pat.reference, pro.reference) AS sku,
                 ROUND(
                     CASE
@@ -560,7 +564,7 @@ class Reglasamazon extends Module
              CASE
             WHEN (
 				CASE #case para saber si es sin stock, outlet, c o normal
-                        WHEN (ava.quantity <= 0 AND pro.id_supplier IN (65,53,24,8,111,121,50) AND ava.out_of_stock = 1) THEN (
+                        WHEN (ava.quantity <= 0 AND pro.id_supplier IN (".implode(',',$this->proveedores_sin_stock).") AND ava.out_of_stock = 1) THEN (
                             CASE 
                             WHEN ((pro.wholesale_price*((tax.rate/100)+1) * (((are.margen_minimo_sin_stock + 15)/100) + 1)) + 1.21) > 30 THEN 
                                     ROUND((( ((pro.wholesale_price*((tax.rate/100)+1)) + are.coste_sign + 1.21) * ( ((are.margen_minimo_sin_stock + 15)/100) + 1) )) * are.cambio, 2)
@@ -599,6 +603,7 @@ class Reglasamazon extends Module
             END 
             AS 'minimo_mayor_que_pvp'
             #fin calculo minimum mayor que price
+            , LPAD(IFNULL(pat.ean13, pro.ean13), 13, 0) AS ean13
 
             FROM lafrips_product pro
             JOIN lafrips_stock_available ava ON pro.id_product = ava.id_product 
@@ -608,8 +613,8 @@ class Reglasamazon extends Module
             JOIN lafrips_tax tax ON tax.id_tax = tar.id_tax
             LEFT JOIN lafrips_mensaje_disponibilidad med ON med.id_supplier = pro.id_supplier AND med.id_lang = 1
             LEFT JOIN lafrips_consumos con ON con.id_product = ava.id_product AND con.id_product_attribute = ava.id_product_attribute
-            WHERE pro.id_product IN ( #categorías aAmazon
-            SELECT id_product FROM lafrips_category_product WHERE id_category IN (2164, 2347, 2351, 2356, 2360, 2366, 2368, 2372, 2383, 2445, 2446, 2452))            
+            WHERE pro.id_product IN ( #categorías aAmazon - solo queda 1
+            SELECT id_product FROM lafrips_category_product WHERE id_category = 2356)            
             AND #si el producto tiene atributos, evitamos el producto base, solo el atributo con stock
             (
                 CASE
@@ -619,6 +624,8 @@ class Reglasamazon extends Module
             )
             AND pro.active = 1
             AND pro.cache_is_pack = 0
+            AND pro.id_product NOT IN (SELECT id_product FROM lafrips_category_product WHERE id_category = 2374)
+            HAVING ean13 != '0000000000000'
             ORDER BY pro.id_product, sku ASC";
 
             // var_dump($sql_productos);
@@ -631,11 +638,14 @@ class Reglasamazon extends Module
                 // La primera línea es sku price quantity add-delete merchant-shipping-group-name handling-time, separados por tabulado \t
                 // \n y \t tienen que ir entre comillas dobles para que sean cambio de página y tabulado               
                 // 26/08/2024 Cambiado a:  
-                //sku price quantity merchant-shipping-group-name handling-time minimum_seller_allowed_price maximum_seller_allowed_price
-                fwrite($contenido, "sku\tprice\tquantity\tmerchant-shipping-group-name\thandling-time\tminimum_seller_allowed_price\tmaximum_seller_allowed_price\n");
+                //sku price quantity merchant-shipping-group-name handling-time minimum-seller-allowed-price maximum-seller-allowed-price
+                //02/05/2025 Añadimos Ean (product id type 4)
+                fwrite($contenido, "sku\tproduct-id\tproduct-id-type\titem-condition\tprice\tquantity\tmerchant-shipping-group-name\thandling-time\tminimum-seller-allowed-price\tmaximum-seller-allowed-price\n");
                 
                 foreach ($productos as $producto){
                     $sku = $producto['sku'];   
+
+                    $ean = $producto['ean13'];
                     
                     $price = $producto['price'];                        
                      
@@ -666,7 +676,7 @@ class Reglasamazon extends Module
                     }                       
                     
                     //las variables se ponen sin '..' porque al ir entre dobles comillas las interpreta directamente                    
-                    fwrite($contenido, "$sku\t$price\t$quantity\t$merchant_shipping_group_name\t$handling_time\t$minimum_seller_allowed_price\t$maximum_seller_allowed_price\n");
+                    fwrite($contenido, "$sku\t$ean\t4\t11\t$price\t$quantity\t$merchant_shipping_group_name\t$handling_time\t$minimum_seller_allowed_price\t$maximum_seller_allowed_price\n");
                     
                 }
 
