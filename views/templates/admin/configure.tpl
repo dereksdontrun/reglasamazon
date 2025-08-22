@@ -32,14 +32,10 @@
 	<p>
 		Aquí puedes modificar los parámetros en función a los que se establecerán las reglas de precios para los diferentes marketplaces de Amazon.<br>
 		Se muestra la información almacenada en la tabla de reglas de Amazon, puedes editar los valores, añadir un nuevo marketplace o eliminar uno existente.<br>
-		El botón guardar almacenará los parámetros actuales. El botón inferior Exportar Reglas generará el documento para importar las reglas en Amazon, con referencia a cada marketplace. Cada botón lateral de Exportar generará un documento para importar en cada marketplace de Amazon que contendrá el PVP y el stock de cada producto con categoría Amazon, y en el caso de los porductos de venta sin stock reflejará un stock de 999 unidades y una latencia de 4 días. Además incluirá cada producto de peso superior a un kg y marketplace no España en la regla de envíos Productos Pesados, y en el caso del marketplace España, incluirá los productos de venta sin stock en la regla de envíos Productos No Prime ligeros.<br>
-		Margen mínimo C corresponde al aplicable a los productos de clasificación C que no tienen la categoría Outlet y su antigüedad es superior a la establecida para considerarlos novedad.<br>
-		Margen mínimo Outlet corresponde al aplicable a los productos que tienen la categoría Outlet independientemente de su antigüedad o clasificación ABC.<br>
-		Margen mínimo corresponde al resto de los productos (no tienen la categoría Outlet ni clasificación C).<br>
-		Margen mínimo Sin Stock corresponde a los productos que vendemos sin stock físico en la web. Esta regla tiene más peso que las demás, si un producto es C y sin stock, el margen a aplicar será Sin Stock.
+		El botón guardar almacenará los parámetros actuales. El botón inferior Exportar Reglas generará el documento para importar las reglas en Amazon, con referencia a cada marketplace. Cada botón lateral de Exportar generará un documento para importar en cada marketplace de Amazon que contendrá el PVP y el stock de cada producto con categoría Amazon, y en el caso de los porductos de venta sin stock reflejará un stock de 999 unidades y una latencia de 4 días. Además incluirá cada producto de peso superior a un kg y marketplace no España en la regla de envíos Productos Pesados, y en el caso del marketplace España, incluirá los productos de venta sin stock en la regla de envíos Productos No Prime ligeros.
 	</p>		
 </div>
- {* Quiero cargar la página de configuración del módulo con los datos que haya en la tabla frik_amazon_reglas, a modo de formulario rellenado, así puede editarse, añadir un nuevo país (o eliminar uno) y guardar lo que se edite o se cree.
+ {* Quiero cargar la página de configuración del módulo con los datos que haya en la tabla lafrips_amazon_reglas, a modo de formulario rellenado, así puede editarse, añadir un nuevo país (o eliminar uno) y guardar lo que se edite o se cree.
  En lugar de utilizar el helper para forms de prestashop, que es un lío, genero todo directamente en el tpl *}
 <div class="bootstrap panel main-block" id="panel_principal">
 	<h3><i class="icon icon-cogs"></i> Configuración</h3>
@@ -101,31 +97,31 @@
 							</div>
 						</div>
 						<div class="form-group col-xs-1 div_input">
-							<label for="margen_minimo_{$marketplace['id_amazon_reglas']}">Margen Mínimo</label>
+							<label for="margen_pvp_menor_25_{$marketplace['id_amazon_reglas']}">Margen PVP &lt; 25</label>
 							<div class="input-group">
 								<span class="input-group-addon">%</span>
-								<input type="text" name="margen_minimo_{$marketplace['id_amazon_reglas']}" id="margen_minimo_{$marketplace['id_amazon_reglas']}" value="{$marketplace['margen_minimo']|escape:'html':'UTF-8'}" class="form-control numerico" required>
+								<input type="text" name="margen_pvp_menor_25_{$marketplace['id_amazon_reglas']}" id="margen_pvp_menor_25_{$marketplace['id_amazon_reglas']}" value="{$marketplace['margen_pvp_menor_25']|escape:'html':'UTF-8'}" class="form-control numerico" required>
 							</div>
 						</div>
 						<div class="form-group col-xs-1 div_input">
-							<label for="margen_minimo_c_{$marketplace['id_amazon_reglas']}">Mínimo C</label>
+							<label for="margen_pvp_25_75_{$marketplace['id_amazon_reglas']}">Margen PVP &gt;= 25 y &lt; 75</label>
 							<div class="input-group">
 								<span class="input-group-addon">%</span>
-								<input type="text" name="margen_minimo_c_{$marketplace['id_amazon_reglas']}" id="margen_minimo_c_{$marketplace['id_amazon_reglas']}" value="{$marketplace['margen_minimo_c']|escape:'html':'UTF-8'}" class="form-control numerico" required>
+								<input type="text" name="margen_pvp_25_75_{$marketplace['id_amazon_reglas']}" id="margen_pvp_25_75_{$marketplace['id_amazon_reglas']}" value="{$marketplace['margen_pvp_25_75']|escape:'html':'UTF-8'}" class="form-control numerico" required>
 							</div>
 						</div>
 						<div class="form-group col-xs-1 div_input">
-							<label for="margen_minimo_outlet_{$marketplace['id_amazon_reglas']}">Mínimo Outlet</label>
+							<label for="margen_pvp_75_200_{$marketplace['id_amazon_reglas']}">Margen PVP &gt;= 75 y &lt; 200</label>
 							<div class="input-group">
 								<span class="input-group-addon">%</span>
-								<input type="text" name="margen_minimo_outlet_{$marketplace['id_amazon_reglas']}" id="margen_minimo_outlet_{$marketplace['id_amazon_reglas']}" value="{$marketplace['margen_minimo_outlet']|escape:'html':'UTF-8'}" class="form-control numerico" required>
+								<input type="text" name="margen_pvp_75_200_{$marketplace['id_amazon_reglas']}" id="margen_pvp_75_200_{$marketplace['id_amazon_reglas']}" value="{$marketplace['margen_pvp_75_200']|escape:'html':'UTF-8'}" class="form-control numerico" required>
 							</div>
 						</div>
 						<div class="form-group col-xs-1 div_input">
-							<label for="margen_minimo_sin_stock_{$marketplace['id_amazon_reglas']}">Mínimo Sin Stock</label>
+							<label for="margen_pvp_mayor_200_{$marketplace['id_amazon_reglas']}">Margen PVP &gt;= 200</label>
 							<div class="input-group">
 								<span class="input-group-addon">%</span>
-								<input type="text" name="margen_minimo_sin_stock_{$marketplace['id_amazon_reglas']}" id="margen_minimo_sin_stock_{$marketplace['id_amazon_reglas']}" value="{$marketplace['margen_minimo_sin_stock']|escape:'html':'UTF-8'}" class="form-control numerico" required>
+								<input type="text" name="margen_pvp_mayor_200_{$marketplace['id_amazon_reglas']}" id="margen_pvp_mayor_200_{$marketplace['id_amazon_reglas']}" value="{$marketplace['margen_pvp_mayor_200']|escape:'html':'UTF-8'}" class="form-control numerico" required>
 							</div>
 						</div>
 						<div class="form-group col-xs-1 div_input">

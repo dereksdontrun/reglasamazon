@@ -184,7 +184,7 @@ function start() {
 
     function eliminarMarketplace(event) {
         console.log('Eliminar Marketplace');
-        //hay que saber si el botón de eliminar pertenece a un marketplace existente en la tabla frik_amazon_reglas, en cuyo caso hay que eliminar la entrada de la tabla, o si es un nuevo marketplace agregado en esta ejecución del módulo y por tanto solo hay que eliminar el child que se añadió a contenedor_marketplace. Lo hacemos comprobando el id del div, si contiene "nuevo", se elimina el div, parando la ejecución del submit, si no, seguimos con el submit para eliminar la entrada de la tabla.
+        //hay que saber si el botón de eliminar pertenece a un marketplace existente en la tabla lafrips_amazon_reglas, en cuyo caso hay que eliminar la entrada de la tabla, o si es un nuevo marketplace agregado en esta ejecución del módulo y por tanto solo hay que eliminar el child que se añadió a contenedor_marketplace. Lo hacemos comprobando el id del div, si contiene "nuevo", se elimina el div, parando la ejecución del submit, si no, seguimos con el submit para eliminar la entrada de la tabla.
         
         console.log(event.currentTarget.id);
         if (event.currentTarget.id.includes("nuevo")) {

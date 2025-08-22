@@ -103,31 +103,31 @@ function start() {
                 </div>
             </div>
             <div class="form-group col-xs-1 div_input">
-                <label for="margen_minimo_nuevo_${id}">Margen Mínimo</label>
+                <label for="margen_pvp_menor_25_nuevo_${id}">Margen PVP &lt; 25</label>
                 <div class="input-group">
 					<span class="input-group-addon">%</span>
-                    <input type="text" name="margen_minimo_nuevo_${id}" id="margen_minimo_nuevo_${id}" value="" class="form-control numerico" required>
+                    <input type="text" name="margen_pvp_menor_25_nuevo_${id}" id="margen_pvp_menor_25_nuevo_${id}" value="" class="form-control numerico" required>
                 </div>
             </div>
             <div class="form-group col-xs-1 div_input">
-                <label for="margen_minimo_c_nuevo_${id}">Mínimo C</label>
+                <label for="margen_pvp_25_75_nuevo_${id}">Margen PVP &gt;= 25 y &lt; 75</label>
                 <div class="input-group">
                     <span class="input-group-addon">%</span>
-                    <input type="text" name="margen_minimo_c_nuevo_${id}" id="margen_minimo_c_nuevo_${id}" value="" class="form-control numerico" required>
+                    <input type="text" name="margen_pvp_25_75_nuevo_${id}" id="margen_pvp_25_75_nuevo_${id}" value="" class="form-control numerico" required>
                 </div>
             </div>
             <div class="form-group col-xs-1 div_input">
-                <label for="margen_minimo_outlet_nuevo_${id}">Mínimo Outlet</label>
+                <label for="margen_pvp_75_200_nuevo_${id}">Margen PVP &gt;= 75 y &lt; 200</label>
                 <div class="input-group">
                     <span class="input-group-addon">%</span>
-                    <input type="text" name="margen_minimo_outlet_nuevo_${id}" id="margen_minimo_outlet_nuevo_${id}" value="" class="form-control numerico" required>
+                    <input type="text" name="margen_pvp_75_200_nuevo_${id}" id="margen_pvp_75_200_nuevo_${id}" value="" class="form-control numerico" required>
                 </div>
             </div>
             <div class="form-group col-xs-1 div_input">
-                <label for="margen_minimo_sin_stock_nuevo_${id}">Mínimo Sin Stock</label>
+                <label for="margen_pvp_mayor_200_nuevo_${id}">Margen PVP &gt;= 200</label>
                 <div class="input-group">
                     <span class="input-group-addon">%</span>
-                    <input type="text" name="margen_minimo_sin_stock_nuevo_${id}" id="margen_minimo_sin_stock_nuevo_${id}" value="" class="form-control numerico" required>
+                    <input type="text" name="margen_pvp_mayor_200_nuevo_${id}" id="margen_pvp_mayor_200_nuevo_${id}" value="" class="form-control numerico" required>
                 </div>
             </div>
             <div class="form-group col-xs-1 div_input">
@@ -184,7 +184,7 @@ function start() {
 
     function eliminarMarketplace(event) {
         console.log('Eliminar Marketplace');
-        //hay que saber si el botón de eliminar pertenece a un marketplace existente en la tabla frik_amazon_reglas, en cuyo caso hay que eliminar la entrada de la tabla, o si es un nuevo marketplace agregado en esta ejecución del módulo y por tanto solo hay que eliminar el child que se añadió a contenedor_marketplace. Lo hacemos comprobando el id del div, si contiene "nuevo", se elimina el div, parando la ejecución del submit, si no, seguimos con el submit para eliminar la entrada de la tabla.
+        //hay que saber si el botón de eliminar pertenece a un marketplace existente en la tabla lafrips_amazon_reglas, en cuyo caso hay que eliminar la entrada de la tabla, o si es un nuevo marketplace agregado en esta ejecución del módulo y por tanto solo hay que eliminar el child que se añadió a contenedor_marketplace. Lo hacemos comprobando el id del div, si contiene "nuevo", se elimina el div, parando la ejecución del submit, si no, seguimos con el submit para eliminar la entrada de la tabla.
         
         console.log(event.currentTarget.id);
         if (event.currentTarget.id.includes("nuevo")) {

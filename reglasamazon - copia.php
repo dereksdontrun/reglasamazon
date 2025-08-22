@@ -465,6 +465,7 @@ class Reglasamazon extends Module
             //AND (ava.quantity > 0 OR (ava.quantity <= 0 AND pro.id_supplier IN (".implode(',',$this->proveedores_sin_stock).") AND ava.out_of_stock = 1))
             //indicamos en el JOIN de la tabla de reglas el marketplace del que sacar los datos, JOIN frik_amazon_reglas are ON are.codigo = $codigo
             //para handling ponemos 1 si no es sin stock para asegurarnos de que no quede 4 de una pasada anterior
+            //02/05/2025 Añadimos ean para que sirva para subir nuevos productos
             $sql_productos = "SELECT IFNULL(pat.reference, pro.reference) AS sku,
                 ROUND(
                     CASE
@@ -602,6 +603,7 @@ class Reglasamazon extends Module
             END 
             AS 'minimo_mayor_que_pvp'
             #fin calculo minimum mayor que price
+            , LPAD(IFNULL(pat.ean13, pro.ean13), 13, 0) AS ean13
 
             FROM lafrips_product pro
             JOIN lafrips_stock_available ava ON pro.id_product = ava.id_product 
@@ -623,6 +625,7 @@ class Reglasamazon extends Module
             AND pro.active = 1
             AND pro.cache_is_pack = 0
             AND pro.id_product NOT IN (SELECT id_product FROM lafrips_category_product WHERE id_category = 2374)
+            HAVING ean13 != '0000000000000'
             ORDER BY pro.id_product, sku ASC";
 
             // var_dump($sql_productos);
@@ -636,10 +639,13 @@ class Reglasamazon extends Module
                 // \n y \t tienen que ir entre comillas dobles para que sean cambio de página y tabulado               
                 // 26/08/2024 Cambiado a:  
                 //sku price quantity merchant-shipping-group-name handling-time minimum-seller-allowed-price maximum-seller-allowed-price
-                fwrite($contenido, "sku\tprice\tquantity\tmerchant-shipping-group-name\thandling-time\tminimum-seller-allowed-price\tmaximum-seller-allowed-price\n");
+                //02/05/2025 Añadimos Ean (product id type 4)
+                fwrite($contenido, "sku\tproduct-id\tproduct-id-type\titem-condition\tprice\tquantity\tmerchant-shipping-group-name\thandling-time\tminimum-seller-allowed-price\tmaximum-seller-allowed-price\n");
                 
                 foreach ($productos as $producto){
                     $sku = $producto['sku'];   
+
+                    $ean = $producto['ean13'];
                     
                     $price = $producto['price'];                        
                      
@@ -670,7 +676,7 @@ class Reglasamazon extends Module
                     }                       
                     
                     //las variables se ponen sin '..' porque al ir entre dobles comillas las interpreta directamente                    
-                    fwrite($contenido, "$sku\t$price\t$quantity\t$merchant_shipping_group_name\t$handling_time\t$minimum_seller_allowed_price\t$maximum_seller_allowed_price\n");
+                    fwrite($contenido, "$sku\t$ean\t4\t11\t$price\t$quantity\t$merchant_shipping_group_name\t$handling_time\t$minimum_seller_allowed_price\t$maximum_seller_allowed_price\n");
                     
                 }
 

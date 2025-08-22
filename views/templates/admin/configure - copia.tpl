@@ -39,7 +39,7 @@
 		Margen mínimo Sin Stock corresponde a los productos que vendemos sin stock físico en la web. Esta regla tiene más peso que las demás, si un producto es C y sin stock, el margen a aplicar será Sin Stock.
 	</p>		
 </div>
- {* Quiero cargar la página de configuración del módulo con los datos que haya en la tabla frik_amazon_reglas, a modo de formulario rellenado, así puede editarse, añadir un nuevo país (o eliminar uno) y guardar lo que se edite o se cree.
+ {* Quiero cargar la página de configuración del módulo con los datos que haya en la tabla lafrips_amazon_reglas, a modo de formulario rellenado, así puede editarse, añadir un nuevo país (o eliminar uno) y guardar lo que se edite o se cree.
  En lugar de utilizar el helper para forms de prestashop, que es un lío, genero todo directamente en el tpl *}
 <div class="bootstrap panel main-block" id="panel_principal">
 	<h3><i class="icon icon-cogs"></i> Configuración</h3>
@@ -67,10 +67,16 @@
 				<div class="form-group row">
 					<div class="form-group col-xs-10">
 						<div class="form-group col-xs-2 div_input">
-							<label for="pais_{$marketplace['id_amazon_reglas']}">País</label><br>
-							<div class="input-group">
-								<span class="input-group-addon"><i class="icon icon-globe"></i></span>
-								<input type="text" name="pais_{$marketplace['id_amazon_reglas']}" id="pais_{$marketplace['id_amazon_reglas']}" value="{$marketplace['pais']|escape:'html':'UTF-8'}" class="form-control texto pais" readonly required>
+							<div class="col-xs-4 col-sm-4 col-md-4">
+								<label for="export_reglas_{$marketplace['id_amazon_reglas']}">Exportar</label>
+								<input type="checkbox" class="custom-control-input" name="marketplaces_export_reglas[]" id="export_reglas_{$marketplace['id_amazon_reglas']}" value="{$marketplace['id_amazon_reglas']}" checked>								
+							</div>
+							<div class="col-xs-8 col-sm-8 col-md-8">
+								<label for="pais_{$marketplace['id_amazon_reglas']}">País</label><br>
+								<div class="input-group">
+									<span class="input-group-addon"><i class="icon icon-globe"></i></span>
+									<input type="text" name="pais_{$marketplace['id_amazon_reglas']}" id="pais_{$marketplace['id_amazon_reglas']}" value="{$marketplace['pais']|escape:'html':'UTF-8'}" class="form-control texto pais" readonly required>
+								</div>
 							</div>
 						</div>
 						<div class="form-group col-xs-1 div_input">
